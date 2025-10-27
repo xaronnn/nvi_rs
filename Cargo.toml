@@ -1,0 +1,24 @@
+[package]
+name = "nvi_rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Uğur Pekesen"]
+description = "Rust client library for NVI / KPS identity verification."
+license = "MIT"
+repository = ""
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+thiserror = "1.0"
+quick-xml = "0.26"
+hmac = "0.12"
+sha1 = "0.10"
+base64 = "0.21"
+tracing = "0.1"
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+wiremock = "0.5"
+
+[workspace]
