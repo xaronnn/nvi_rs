@@ -1,3 +1,4 @@
+use crate::constants::{namespaces, xml_tags};
 use crate::errors::KPSError;
 use hmac::{Hmac, Mac};
 use sha1::Sha1;
@@ -15,8 +16,21 @@ pub fn build_verify_soap(
     let birth_day = birth_day.unwrap_or("");
     format!(
         r#"<?xml version=\"1.0\" encoding=\"utf-8\"?>
-<s:Envelope xmlns:s=\"http://www.w3.org/2003/05/soap-envelope\">\n<s:Header/>\n<s:Body>\n<Verify xmlns=\"http://kps.nvi.gov.tr/IKPS/Service\">\n<TCKimlikNo>{}</TCKimlikNo>\n<Ad>{}</Ad>\n<Soyad>{}</Soyad>\n<DogumYili>{}</DogumYili>\n<DogumAy>{}</DogumAy>\n<DogumGun>{}</DogumGun>\n</Verify>\n</s:Body>\n</s:Envelope>"#,
-        national_id, first_name, last_name, birth_year, birth_month, birth_day
+<s:Envelope xmlns:s=\"{soap}\">\n<s:Header/>\n<s:Body>\n<Verify xmlns=\"{body_ns}\">\n<{nid}>{}</{nid}>\n<{first}>{}</{first}>\n<{last}>{}</{last}>\n<{y}>{}</{y}>\n<{m}>{}</{m}>\n<{d}>{}</{d}>\n</Verify>\n</s:Body>\n</s:Envelope>"#,
+        soap = namespaces::SOAP_NS_12,
+        body_ns = namespaces::BODY_NS,
+        nid = xml_tags::NATIONAL_ID,
+        first = xml_tags::FIRST_NAME,
+        last = xml_tags::LAST_NAME,
+        y = xml_tags::BIRTH_YEAR,
+        m = xml_tags::BIRTH_MONTH,
+        d = xml_tags::BIRTH_DAY,
+        national_id,
+        first_name,
+        last_name,
+        birth_year,
+        birth_month,
+        birth_day
     )
 }
 
@@ -36,7 +50,7 @@ pub fn validate_inputs(
 ) -> Result<(), KPSError> {
     if national_id.len() != 11 || !national_id.chars().all(|c| c.is_ascii_digit()) {
         return Err(KPSError::Validation(
-            "TCKimlikNo (national id) must be 11 digits".into(),
+            format!("{} must be 11 digits", xml_tags::NATIONAL_ID).into(),
         ));
     }
     if first_name.trim().is_empty() || last_name.trim().is_empty() {

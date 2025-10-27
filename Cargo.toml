@@ -17,6 +17,7 @@ sha1 = "0.10"
 base64 = "0.21"
 tracing = "0.1"
 uuid = { version = "1", features = ["v4"] }
+dotenvy = "0.15"
 
 [dev-dependencies]
 wiremock = "0.5"

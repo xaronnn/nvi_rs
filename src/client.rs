@@ -1,3 +1,5 @@
+use crate::constants::xml_tags::{DESCRIPTION, PERSON_TYPE, RESULT_CODE, RESULT_MESSAGE};
+use crate::constants::SOAP_CONTENT_TYPE;
 use crate::errors::KPSError;
 use crate::soap::build_verify_soap;
 use crate::sts::acquire_token;
@@ -35,9 +37,9 @@ pub struct NviClient {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PersonType {
-    TcVatandasi,
-    Yabanci,
-    MaviKart,
+    Citizen,
+    Foreigner,
+    BlueCard,
 }
 
 #[derive(Debug, Clone)]
@@ -93,10 +95,7 @@ impl NviClient {
         let resp = self
             .http
             .post(&self.cfg.service_url)
-            .header(
-                reqwest::header::CONTENT_TYPE,
-                "application/soap+xml; charset=utf-8",
-            )
+            .header(reqwest::header::CONTENT_TYPE, SOAP_CONTENT_TYPE)
             .header("Authorization", format!("Bearer {}", token))
             .body(body.clone())
             .send()
@@ -109,28 +108,28 @@ impl NviClient {
     }
 
     fn parse_response(&self, doc: &str) -> Result<QueryResult, KPSError> {
-        let code = extract_first_tag_text(doc, "SonucKodu")
+        let code = extract_first_tag_text(doc, RESULT_CODE)
             .ok()
             .flatten()
             .and_then(|s| s.parse::<u8>().ok())
             .unwrap_or(0);
 
-        let description = extract_first_tag_text(doc, "SonucMesaji")
+        let description = extract_first_tag_text(doc, RESULT_MESSAGE)
             .ok()
             .flatten()
-            .or_else(|| extract_first_tag_text(doc, "Aciklama").ok().flatten());
+            .or_else(|| extract_first_tag_text(doc, DESCRIPTION).ok().flatten());
 
         let mut extra = HashMap::new();
-        if let Ok(Some(person_type)) = extract_first_tag_text(doc, "KisiTipi") {
-            extra.insert("KisiTipi".into(), person_type);
+        if let Ok(Some(person_type)) = extract_first_tag_text(doc, PERSON_TYPE) {
+            extra.insert(PERSON_TYPE.into(), person_type);
         }
 
         let status = code == 1;
-        let person = extra.get("KisiTipi").map(|s| match s.as_str() {
-            "TC_VATANDASI" | "tc_vatandasi" => PersonType::TcVatandasi,
-            "YABANCI" | "yabanci" => PersonType::Yabanci,
-            "MAVI_KART" | "mavi_kart" => PersonType::MaviKart,
-            _ => PersonType::TcVatandasi,
+        let person = extra.get(PERSON_TYPE).map(|s| match s.as_str() {
+            "TC_VATANDASI" | "tc_vatandasi" => PersonType::Citizen,
+            "YABANCI" | "yabanci" => PersonType::Foreigner,
+            "MAVI_KART" | "mavi_kart" => PersonType::BlueCard,
+            _ => PersonType::Citizen,
         });
 
         Ok(QueryResult {

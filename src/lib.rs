@@ -1,4 +1,5 @@
 pub mod client;
+pub mod constants;
 pub mod errors;
 pub mod soap;
 pub mod sts;

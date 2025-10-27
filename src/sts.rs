@@ -1,3 +1,5 @@
+use crate::constants::xml_tags::REQUESTED_SECURITY_TOKEN;
+use crate::constants::SOAP_CONTENT_TYPE;
 use crate::errors::KPSError;
 use crate::xml::extract_first_tag_text;
 use reqwest::Client;
@@ -47,10 +49,7 @@ pub async fn acquire_token(
 
     let resp = client
         .post(sts_url)
-        .header(
-            reqwest::header::CONTENT_TYPE,
-            "application/soap+xml; charset=utf-8",
-        )
+        .header(reqwest::header::CONTENT_TYPE, SOAP_CONTENT_TYPE)
         .body(rst)
         .send()
         .await
@@ -62,7 +61,7 @@ pub async fn acquire_token(
         text.len()
     );
 
-    if let Ok(Some(token_xml)) = extract_first_tag_text(&text, "RequestedSecurityToken") {
+    if let Ok(Some(token_xml)) = extract_first_tag_text(&text, REQUESTED_SECURITY_TOKEN) {
         Ok(token_xml)
     } else {
         Err(KPSError::STS(
